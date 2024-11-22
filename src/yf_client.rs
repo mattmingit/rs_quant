@@ -1,4 +1,4 @@
-use crate::yf_const::{BASE_URL, SEARCH_URL};
+use crate::yf_const::{YCHART_URL, YQUOTESUMMARY, YSEARCH_URL};
 use crate::yf_error::YahooError;
 use reqwest::{Client, ClientBuilder};
 use std::time::Duration;
@@ -8,6 +8,7 @@ pub struct YahooConnector {
     client: Client,
     url: &'static str,
     search_url: &'static str,
+    summary_url: &'static str,
 }
 
 #[derive(Default)]
@@ -32,8 +33,9 @@ impl Default for YahooConnector {
     fn default() -> Self {
         YahooConnector {
             client: Client::default(),
-            url: BASE_URL,
-            search_url: SEARCH_URL,
+            url: YCHART_URL,
+            search_url: YSEARCH_URL,
+            summary_url: YQUOTESUMMARY,
         }
     }
 }
@@ -48,8 +50,9 @@ impl YahooConnectorBuilder {
 
         Ok(YahooConnector {
             client,
-            url: BASE_URL,
-            search_url: SEARCH_URL,
+            url: YCHART_URL,
+            search_url: YSEARCH_URL,
+            summary_url: YQUOTESUMMARY,
         })
     }
 

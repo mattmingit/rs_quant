@@ -1,4 +1,5 @@
-mod data;
-mod yf_client;
-mod yf_const;
-mod yf_error;
+pub mod data;
+pub mod utils;
+pub mod yf_client;
+pub mod yf_const;
+pub mod yf_error;

@@ -4,7 +4,7 @@ use serde::{
     de::{self, Deserializer, MapAccess, SeqAccess, Visitor},
     Deserialize, Serialize,
 };
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, fmt, vec};
 
 /// Made decimal a feature so it can be enabled by user. This handle decimal base on feature enable status.
 #[cfg(not(feature = "decimal"))]
@@ -66,6 +66,78 @@ impl YResponse {
             }
         }
         Err(YahooError::EmptyDataSet)
+    }
+
+    pub fn quotes(&self) -> Result<Vec<Quote>, YahooError> {
+        self.check_consistency()?;
+        let stock = &self.chart.result[0];
+        let mut quotes = Vec::new();
+        let n = stock.timestamp.len();
+        for i in 0..n {
+            let timestamp = stock.timestamp[i];
+            let quote = stock.indicators.get_ith_quote(timestamp, i);
+            if let Ok(q) = quote {
+                quotes.push(q);
+            }
+        }
+        Ok(quotes)
+    }
+
+    /// This method retrieves information about the metadata of the assets
+    pub fn metadata(&self) -> Result<YMetaData, YahooError> {
+        self.check_consistency()?;
+        let stock = &self.chart.result[0];
+        Ok(stock.meta.to_owned())
+    }
+
+    /// This method retrieves information about the splits that might have
+    /// occurred during considered time period.
+    pub fn splits(&self) -> Result<Vec<Split>, YahooError> {
+        self.check_consistency()?;
+        let stock = &self.chart.result[0];
+        if let Some(events) = &stock.events {
+            if let Some(splits) = &events.splits {
+                let mut data = splits.values().cloned().collect::<Vec<Split>>();
+                data.sort_unstable_by_key(|d| d.date);
+                return Ok(data);
+            }
+        }
+        Ok(vec![])
+    }
+
+    /// This method retrieves information about the dividends that might have
+    /// occurred during the considered time period.
+    ///
+    /// Note: Date is ex-dividend date.
+    pub fn dividends(&self) -> Result<Vec<Dividend>, YahooError> {
+        self.check_consistency()?;
+        let stock = &self.chart.result[0];
+        if let Some(events) = &stock.events {
+            if let Some(dividends) = &events.dividends {
+                let mut data = dividends.values().cloned().collect::<Vec<Dividend>>();
+                data.sort_unstable_by_key(|d| d.date);
+                return Ok(data);
+            }
+        }
+        Ok(vec![])
+    }
+
+    /// This method retrieves information about the capital gains that might have
+    /// occurred during the considered time period (available for mutual funds).
+    pub fn capital_gains(&self) -> Result<Vec<CapitalGain>, YahooError> {
+        self.check_consistency()?;
+        let stock = &self.chart.result[0];
+        if let Some(events) = &stock.events {
+            if let Some(capital_gains) = &events.capital_gains {
+                let mut data = capital_gains
+                    .values()
+                    .cloned()
+                    .collect::<Vec<CapitalGain>>();
+                data.sort_unstable_by_key(|d| d.date);
+                return Ok(data);
+            }
+        }
+        Ok(vec![])
     }
 }
 
@@ -268,17 +340,17 @@ pub struct EventsBlock {
     pub capital_gains: Option<HashMap<u64, CapitalGain>>,
 }
 
-/// The struct simply models a split that has occured
+/// The struct simply models a split that has occurred
 #[derive(Debug, Deserialize, Clone)]
 pub struct Split {
-    /// The date (timestamp) when the split occured
+    /// The date (timestamp) when the split occurred
     pub date: u64,
-    /// Numerator of the split. For istance 1:5 split means you get 5 share
+    /// Numerator of the split. For instance 1:5 split means you get 5 share
     /// wherever you had one before the split. (Here the numerator is 1 and
     /// denominator is 5). A reverse split is considered as nothing but a regular
     /// split with a numerator > denom.
     pub numerator: Decimal,
-    /// Denominator ofthe split. For istance 1:5 split means you get 5 share
+    /// Denominator of the split. For instance 1:5 split means you get 5 share
     /// wherever you had one before the split. (Here the numerator is 1 and
     /// denominator is 5). A reverse split is considered as nothing but a regular
     /// split with a numerator > denom.

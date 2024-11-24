@@ -4,16 +4,17 @@ use reqwest::{Client, ClientBuilder};
 use std::time::Duration;
 
 // struct for connection parameters to yahoo! finance server
+#[allow(dead_code)]
 pub struct YahooConnector {
-    client: Client,
-    url: &'static str,
-    search_url: &'static str,
-    summary_url: &'static str,
+    pub client: Client,
+    pub url: &'static str,
+    pub search_url: &'static str,
+    pub summary_url: &'static str,
 }
 
 #[derive(Default)]
 pub struct YahooConnectorBuilder {
-    inner: ClientBuilder,
+    pub inner: ClientBuilder,
 }
 
 impl YahooConnector {

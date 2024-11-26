@@ -4,7 +4,7 @@ use rs_quant::utils::parsers::{
 use serde_json::Value;
 use time::macros::{datetime, format_description};
 use time::OffsetDateTime;
-use yahoo_finance_api::Quote;
+use yahoofinance::Quote;
 
 #[test]
 fn start_date_parser() {

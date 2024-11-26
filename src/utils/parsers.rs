@@ -2,7 +2,7 @@ use serde_json::{json, Value};
 use std::error::Error;
 use time::macros::format_description;
 use time::{Date, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset};
-use yahoo_finance_api::Quote;
+use yahoofinance::Quote;
 
 /// Convert str starting date into datetime
 pub fn parse_start_date(d: &str) -> Result<OffsetDateTime, Box<dyn Error>> {

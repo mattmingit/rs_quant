@@ -1,11 +1,12 @@
+use rs_quant::data::quotes;
+use rs_quant::data::quotes::QuoteItem;
 use rs_quant::fin_numerical::math::returns::{compute_returns, ReturnType};
-use yahoo_finance_api::Quote;
 
 #[test]
 fn test_compute_returns_arithmetic() {
     let data = vec![
-        Quote {
-            timestamp: 1729839600,
+        QuoteItem {
+            datetime: "2024-01-01".to_string(),
             open: 10.0,
             high: 10.1,
             low: 10.0,
@@ -13,8 +14,8 @@ fn test_compute_returns_arithmetic() {
             adjclose: 10.05,
             volume: 219,
         },
-        Quote {
-            timestamp: 1730102400,
+        QuoteItem {
+            datetime: "2024-01-02".to_string(),
             open: 10.05,
             high: 10.1,
             low: 10.0,
@@ -22,8 +23,8 @@ fn test_compute_returns_arithmetic() {
             adjclose: 10.1,
             volume: 759,
         },
-        Quote {
-            timestamp: 1730102400,
+        QuoteItem {
+            datetime: "2024-01-03".to_string(),
             open: 10.05,
             high: 10.1,
             low: 10.0,
@@ -31,8 +32,8 @@ fn test_compute_returns_arithmetic() {
             adjclose: 20.1,
             volume: 759,
         },
-        Quote {
-            timestamp: 1730102400,
+        QuoteItem {
+            datetime: "2024-01-04".to_string(),
             open: 10.05,
             high: 10.1,
             low: 10.0,
@@ -42,15 +43,15 @@ fn test_compute_returns_arithmetic() {
         },
     ];
 
-    let result = compute_returns(data.clone(), ReturnType::Arithmetic).unwrap();
+    let result = compute_returns(data, ReturnType::Arithmetic).unwrap();
     assert!(result.len() > 1usize);
 }
 
 #[test]
 fn test_compute_returns_logarithmic() {
     let data = vec![
-        Quote {
-            timestamp: 1729839600,
+        QuoteItem {
+            datetime: "2024-01-01".to_string(),
             open: 10.0,
             high: 10.1,
             low: 10.0,
@@ -58,8 +59,8 @@ fn test_compute_returns_logarithmic() {
             adjclose: 10.05,
             volume: 219,
         },
-        Quote {
-            timestamp: 1730102400,
+        QuoteItem {
+            datetime: "2024-01-02".to_string(),
             open: 10.05,
             high: 10.1,
             low: 10.0,
@@ -67,8 +68,8 @@ fn test_compute_returns_logarithmic() {
             adjclose: 10.1,
             volume: 759,
         },
-        Quote {
-            timestamp: 1730102400,
+        QuoteItem {
+            datetime: "2024-01-03".to_string(),
             open: 10.05,
             high: 10.1,
             low: 10.0,
@@ -76,8 +77,8 @@ fn test_compute_returns_logarithmic() {
             adjclose: 20.1,
             volume: 759,
         },
-        Quote {
-            timestamp: 1730102400,
+        QuoteItem {
+            datetime: "2024-01-04".to_string(),
             open: 10.05,
             high: 10.1,
             low: 10.0,
@@ -87,6 +88,16 @@ fn test_compute_returns_logarithmic() {
         },
     ];
 
-    let result = compute_returns(data.clone(), ReturnType::Logarithmic).unwrap();
+    let result = compute_returns(data, ReturnType::Logarithmic).unwrap();
     assert!(result.len() > 1usize);
+}
+
+#[tokio::test]
+async fn test_with_yahoo_data() {
+    let res = quotes::get_quotes("NVDA", None, None, Some("5d"), None)
+        .await
+        .unwrap();
+
+    let returns = compute_returns(res, ReturnType::Arithmetic).unwrap();
+    assert!(returns.len() > 1usize);
 }

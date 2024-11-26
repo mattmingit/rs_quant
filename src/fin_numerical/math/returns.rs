@@ -1,5 +1,5 @@
+use crate::data::quotes::QuoteItem;
 use std::error::Error;
-use yahoo_finance_api::Quote;
 
 pub enum ReturnType {
     Logarithmic,
@@ -9,12 +9,12 @@ pub enum ReturnType {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct Return {
-    timestamp: i64,
-    ret: f64,
+    pub datetime: String,
+    pub asset_return: f64,
 }
 
 pub fn compute_returns(
-    data: Vec<Quote>,
+    data: Vec<QuoteItem>,
     return_type: ReturnType,
 ) -> Result<Vec<Return>, Box<dyn Error>> {
     if data.len() < 2 {
@@ -36,8 +36,8 @@ pub fn compute_returns(
         };
 
         ret.push(Return {
-            timestamp: curr.timestamp as i64,
-            ret: ret_value,
+            datetime: curr.datetime.clone(),
+            asset_return: ret_value,
         })
     }
 

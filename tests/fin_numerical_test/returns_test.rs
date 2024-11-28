@@ -1,4 +1,4 @@
-use rs_quant::data::quotes;
+use rs_quant::data::provider::YahooFinance;
 use rs_quant::data::quotes::QuoteItem;
 use rs_quant::fin_numerical::math::returns::{compute_returns, ReturnType};
 
@@ -94,7 +94,9 @@ fn test_compute_returns_logarithmic() {
 
 #[tokio::test]
 async fn test_with_yahoo_data() {
-    let res = quotes::get_quotes("NVDA", None, None, Some("5d"), None)
+    let conn = YahooFinance::connector();
+    let res = conn
+        .get_quotes("NVDA", None, None, Some("5d"), None)
         .await
         .unwrap();
 

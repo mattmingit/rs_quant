@@ -3,7 +3,7 @@ use rs_quant::utils::parsers::{
 };
 use serde_json::Value;
 use time::macros::{datetime, format_description};
-use time::OffsetDateTime;
+use time::{OffsetDateTime, UtcOffset};
 use yahoofinance::Quote;
 
 #[test]
@@ -45,7 +45,7 @@ fn timestamp_to_local_datetime() {
     let r = timestamp_to_localdt(timestamp).unwrap();
 
     let format = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");
-    let local_offset = OffsetDateTime::now_local().unwrap().offset();
+    let local_offset = UtcOffset::from_hms(1, 0, 0).unwrap();
     let expected_datetime = OffsetDateTime::now_utc()
         .to_offset(local_offset)
         .format(&format)

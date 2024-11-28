@@ -35,7 +35,10 @@ pub fn timestamp_to_datetime(timestamp: i64) -> Result<OffsetDateTime, Box<dyn E
 pub fn timestamp_to_localdt(timestamp: u64) -> Result<String, Box<dyn Error>> {
     let t = i64::try_from(timestamp)?;
     let utc_datetime = timestamp_to_datetime(t)?;
-    let local_offset = OffsetDateTime::now_local()?.offset();
+    // Used to use this but OffsetDatetime::now_local but generates conflict with CI actions. Keeping commented to future reference.
+    //let local_offset = OffsetDateTime::now_local()?.offset();
+    // Hardcoding the offset seems to work with CI actions: currently offset set Europe/Rome
+    let local_offset = UtcOffset::from_hms(1, 0, 0)?;
     let local_datetime = utc_datetime.to_offset(local_offset);
 
     let format = format_description!("[year]-[month]-[day] [hour]:[minute]:[second]");

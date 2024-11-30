@@ -1,5 +1,7 @@
 use crate::data::provider::YahooFinance;
-use crate::utils::parsers::{parse_end_date, parse_start_date, timestamp_to_localdt};
+use crate::utils::parsers::{
+    datetime_to_date, parse_end_date, parse_start_date, timestamp_to_localdt,
+};
 use std::error::Error;
 use yahoofinance::Quote;
 
@@ -83,7 +85,15 @@ impl YahooFinance {
             r.push((
                 t.to_string(),
                 self.get_quotes(t, start_date, end_date, period, interval)
-                    .await?,
+                    .await?
+                    .into_iter()
+                    .map(|mut q| {
+                        if let Ok(date) = datetime_to_date(q.datetime.clone()) {
+                            q.datetime = date;
+                        }
+                        q
+                    })
+                    .collect(),
             ));
         }
         Ok(MultipleQuoteItems { data: r })

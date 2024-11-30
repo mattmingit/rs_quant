@@ -1,6 +1,5 @@
 use crate::data::provider::YahooFinance;
 use crate::utils::parsers::{parse_end_date, parse_start_date, timestamp_to_localdt};
-use std::collections::HashMap;
 use std::error::Error;
 use yahoofinance::Quote;
 
@@ -19,7 +18,7 @@ pub struct QuoteItem {
 /// This struct simply models the result of multiple assets quotes querying from yahoo! finance
 #[derive(Debug)]
 pub struct MultipleQuoteItems {
-    pub data: HashMap<String, Vec<QuoteItem>>,
+    pub data: Vec<(String, Vec<QuoteItem>)>,
 }
 
 impl YahooFinance {
@@ -77,15 +76,15 @@ impl YahooFinance {
         interval: Option<&str>,
     ) -> Result<MultipleQuoteItems, Box<dyn Error>> {
         // Initialize results hashmap container
-        let mut r: HashMap<String, Vec<QuoteItem>> = HashMap::new();
+        let mut r: Vec<(String, Vec<QuoteItem>)> = Vec::new();
 
         // Loop through tickers and fetch quotes data
         for t in tickers {
-            r.insert(
+            r.push((
                 t.to_string(),
                 self.get_quotes(t, start_date, end_date, period, interval)
                     .await?,
-            );
+            ));
         }
         Ok(MultipleQuoteItems { data: r })
     }

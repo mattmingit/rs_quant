@@ -47,6 +47,13 @@ pub fn timestamp_to_localdt(timestamp: u64) -> Result<String, Box<dyn Error>> {
     Ok(dt)
 }
 
+pub fn datetime_to_date(d: String) -> Result<String, Box<dyn Error>> {
+    match d.as_str().split_once(" ") {
+        Some((date, _time)) => Ok(date.to_string()),
+        None => Err("Invalid datetime format. Expected %Y-%m-%d %H:%M:%S. {}".into()),
+    }
+}
+
 pub fn quotes_to_json(data: Vec<Quote>) -> Result<Value, Box<dyn Error>> {
     let d: Vec<Value> = data
         .into_iter()

@@ -1,5 +1,6 @@
 use rs_quant::utils::parsers::{
-    parse_end_date, parse_start_date, quotes_to_json, timestamp_to_datetime, timestamp_to_localdt,
+    datetime_to_date, parse_end_date, parse_start_date, quotes_to_json, timestamp_to_datetime,
+    timestamp_to_localdt,
 };
 use serde_json::Value;
 use time::macros::{datetime, format_description};
@@ -52,6 +53,13 @@ fn timestamp_to_local_datetime() {
         .unwrap();
 
     assert_eq!(r, expected_datetime);
+}
+
+#[test]
+fn test_datetime_to_date() {
+    let datetime = "2024-11-30 12:45:30".to_string();
+    let date = datetime_to_date(datetime).unwrap();
+    assert_eq!(date, "2024-11-30");
 }
 
 #[test]

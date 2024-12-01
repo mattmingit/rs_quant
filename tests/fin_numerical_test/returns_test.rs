@@ -1,6 +1,8 @@
 use rs_quant::data::provider::YahooFinance;
 use rs_quant::data::quotes::QuoteItem;
-use rs_quant::fin_numerical::math::returns::{compute_returns, ReturnType};
+use rs_quant::fin_numerical::math::returns::{
+    compute_cumulative_returns, compute_returns, CumulativeReturn, Return, ReturnType,
+};
 
 #[test]
 fn test_compute_returns_arithmetic() {
@@ -102,4 +104,44 @@ async fn test_with_yahoo_data() {
 
     let returns = compute_returns(res, ReturnType::Arithmetic).unwrap();
     assert!(returns.len() > 1usize);
+}
+
+#[tokio::test]
+async fn test_cumulative_returns() {
+    let returns = vec![
+        Return {
+            datetime: "2023-01-01".to_string(),
+            asset_return: 0.01,
+        },
+        Return {
+            datetime: "2023-01-02".to_string(),
+            asset_return: 0.02,
+        },
+        Return {
+            datetime: "2023-01-03".to_string(),
+            asset_return: -0.01,
+        },
+    ];
+
+    let expected = vec![
+        CumulativeReturn {
+            datetime: "2023-01-01".to_string(),
+            asset_cumulative_returns: 0.01,
+        },
+        CumulativeReturn {
+            datetime: "2023-01-02".to_string(),
+            asset_cumulative_returns: 0.0302,
+        },
+        CumulativeReturn {
+            datetime: "2023-01-03".to_string(),
+            asset_cumulative_returns: 0.019898,
+        },
+    ];
+
+    let result = compute_cumulative_returns(returns).unwrap();
+
+    // Compare each result with the expected output
+    for (res, exp) in result.iter().zip(expected.iter()) {
+        assert_eq!(res.datetime, exp.datetime);
+    }
 }

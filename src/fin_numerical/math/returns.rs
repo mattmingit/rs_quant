@@ -13,6 +13,14 @@ pub struct Return {
     pub asset_return: f64,
 }
 
+#[allow(dead_code)]
+#[derive(Debug)]
+pub struct CumulativeReturn {
+    pub datetime: String,
+    pub asset_cumulative_returns: f64,
+}
+
+// Compute the calculation of asset returns: returns calculated can be arithmetic or logarithmic
 pub fn compute_returns(
     data: Vec<QuoteItem>,
     return_type: ReturnType,
@@ -42,4 +50,21 @@ pub fn compute_returns(
     }
 
     Ok(ret)
+}
+
+// Compute the calculation of asset cumulative returns: the argument of the function is a Vec of returns (computed by precedent function)
+pub fn compute_cumulative_returns(
+    returns: Vec<Return>,
+) -> Result<Vec<CumulativeReturn>, Box<dyn Error>> {
+    let mut cumulative = Vec::with_capacity(returns.len());
+    let mut cum_ret = 1.0;
+
+    for r in returns {
+        cum_ret *= 1.0 + r.asset_return;
+        cumulative.push(CumulativeReturn {
+            datetime: r.datetime.clone(),
+            asset_cumulative_returns: cum_ret - 1.0,
+        });
+    }
+    Ok(cumulative)
 }

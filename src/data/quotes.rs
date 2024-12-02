@@ -1,3 +1,128 @@
+//! # Yahoo! Finance QuoteRetrieval and Parsing
+//! This module provides functionality to retrieve and process financial quotes from Yahoo! Finance
+//! using the `yahoofinance` crate (a fork of `yahoo_finance_api`, maintained by its original developers).
+//! It defines structures for handling quote data and methods for querying single and multiple assets.
+//! ## Structs
+//!
+//! ### QuoteItem
+//! Represents a financial quote with a human-readable datetime string instead of a timestamp.
+//! Fields included:
+//! - `datetime`: A `String` representing the datetime of the quote.
+//! - `open`: Opening price as `f64`.
+//! -  `high`: Highest price during the interval as `f64`.
+//! - `low`: Lowest price during the interval as `f64`.
+//! - `close`: Closing price as `f64`.
+//! - `adjclose`: Adjusted closing price as `f64`.
+//! - `volume`: Trading volume as `f64`.
+//!
+//! ### `MultipleQuoteItems`
+//! Represents quotes for multiple assets, where each entry includes:
+//! - `data`: A `Vec<(String, Vec<QuoteItem>)>` where the `String` is the ticker, and
+//!    `Vec<QuoteItem>` contains the quotes for that ticker.
+//!
+//! ## Implementation
+//!
+//! ### Methods for `YahooFinance`
+//!
+//! #### `get_quotes`
+//! Retrieves historical or periodic quotes for a single asset.
+//!
+//! ##### Arguments
+//! - `ticker`: A `&str` specifying the asset ticker symbol (e.g., "AAPL").
+//! - `start_date`: An optional `&str` specifying the start date (e.g, "2023-01-01").
+//! - `end_date`: An optional `&str` specifying the end date (e.g, "2023-12-31").
+//! - `period`: An optional `&str` for predefined periods (e.g, "1d", "5d", "1mo").
+//! - `interval`: An optional `&str` for data intervals (e.g, "1d", "1h"). Defaults to `"1d"`.
+//!
+//! ##### Returns
+//! - `Ok(Vec<QuoteItem>)`: A vector of quotes for the given asset.
+//! - `Err(Box<dyn Error>)`: An error if retrieval or parsing fails.
+//!
+//! ##### Behavior
+//! - **Date Range**: Fetches quotes for the specified start and end dates.
+//! - **Defined Period**: Fetches quotes for the specified period if no date range is provided.
+//! - **Default**: Fetches quotes for the last 1 day at a 1-minute interval if neither a date range nor period is provided.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::data::provider::YahooFinance;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let connector = YahooFinance::connector(); // Assuming `connector` is synchronous
+//!     match connector
+//!         .get_quotes("AAPL", Some("2023-01-01"), Some("2023-01-11"), None, Some("1d"))
+//!         .await
+//!     {
+//!         Ok(quotes) => {
+//!             for quote in quotes {
+//!                 println!("{:?}", quote);
+//!             }
+//!         }
+//!         Err(err) => eprintln!("Error fetching quotes: {}", err),
+//!     }
+//! }
+//! ```
+//!
+//! #### `get_multiple_quotes`
+//! Retrieves historical or periodic quotes for multiple assets.
+//!
+//! ##### Arguments
+//! - `tickers`: A `Vec<&str>` of asset ticker symbols (e.g., `vec!["AAPL", "GOOG"]`).
+//! - `start_date`: An optional `&str` specifying the start date.
+//! - `end_date`: An optional `&str` specifying the end date.
+//! - `period`: An optional `&str` for predefined periods.
+//! - `interval`: An optional `&str` for data intervals. Defaults to `"1d"`.
+//!
+//! ##### Returns
+//! - `Ok(MultipleQuoteItems)`: A collection of quotes for all specified tickers.
+//! - `Err(Box<dyn Error>)`: An error if retrieval or parsing fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::data::provider::YahooFinance;
+//!
+//! #[tokio::main]
+//! async fn main() {
+//!     let connector = YahooFinance::connector(); // Assuming `connector` is synchronous
+//!     match connector
+//!         .get_multiple_quotes(
+//!             vec!["AAPL", "GOOG"],
+//!             Some("2023-01-01"),
+//!             Some("2023-01-11"),
+//!             None,
+//!             Some("1d"),
+//!         )
+//!         .await
+//!     {
+//!         Ok(multiple_quotes) => {
+//!             for (ticker, quotes) in multiple_quotes.data {
+//!                 println!("Quotes for {}: {:?}", ticker, quotes);
+//!             }
+//!         }
+//!         Err(err) => eprintln!("Error fetching multiple quotes: {}", err),
+//!     }
+//! }
+//! ```
+//!
+//! ## Helper Function
+//!
+//! ### `convert_to_datetime_quotes`
+//! Converts a vector of `Quote` (from Yahoo Finance API) into a vector of `QuoteItem`.
+//!
+//! #### Arguments
+//! - `quotes`: A `Vec<Quote>` returned by the Yahoo Finance API.
+//!
+//! #### Returns
+//! - `Ok(Vec<QuoteItem>)`: A vector of `QuoteItem` with human-readable datetimes.
+//! - `Err(Box<dyn Error>)`: An error if datetime conversion fails.
+//!
+//! ## Notes
+//! - The `yahoofinance` crate must be included in your project as a dependency in `Cargo.toml`.
+//! - The helper functions (`parse_start_date`, `parse_end_date`, `timestamp_to_localdt`, etc.) are
+//!   assumed to be defined in the `utils::parsers` module.
+//! - Datetime conversion ensures the timestamps from Yahoo Finance are user-friendly.
+
 use crate::data::provider::YahooFinance;
 use crate::utils::parsers::{
     datetime_to_date, parse_end_date, parse_start_date, timestamp_to_localdt,

@@ -1,3 +1,148 @@
+//! # Utility Functions for Parsing and Conversions
+//! This module provides various helper functions to handle date/time parsing, timestamp conversion,
+//! and data serialization, particularly for use with the `yahoofinance` crate.
+//!
+//! ## Functions
+//!
+//! ### `parse_start_date`
+//! Converts a string representing a start date into an `OffsetDateTime` object.
+//!
+//! ###### Arguments
+//! - `d`: A `&str` in the format `YYYY-MM-DD`.
+//!
+//! ##### Returns
+//! - `Ok(OffssetDateTime)`: The parsed datetime at midnight UTC.
+//! - `Err(Box<dyn Error>)`: Ane error if parsing fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::utils::parsers::parse_start_date;
+//! use std::error::Error;
+//!
+//! fn main() -> Result<(), Box<dyn Error>>{
+//! let start_date = parse_start_date("2023-01-01")?;
+//!     println!("Parsed start date: {}", start_date);
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### `parse_end_date`
+//! Converts a string representing an end date into an `OffsetDateTime` object.
+//!
+//! ##### Arguments
+//! - `d`: A `&str` in the format `YYYY-MM-DD`.
+//!
+//! ##### Returns
+//! - `Ok(OffsetDateTime)`: The parsed datetime at 23:59:59 UTC.
+//! - `Err(Box<dyn Error>)`: An error if parsing fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::utils::parsers::parse_end_date;
+//! use std::error::Error;
+//!
+//! fn main() -> Result<(), Box<dyn Error>>{
+//!     let end_date = parse_end_date("2023-01-01")?;
+//!     println!("Parsed end date: {}", end_date);
+//!     Ok(())
+//! }
+//! ```
+//! ### `timestamp_to_datetime`
+//! Converts a UNIX timestamp into an `OffsetDateTime` object.
+//!
+//! ##### Arguments
+//! - `timestamp`: An `i64` representing the UNIX timestamp.
+//!
+//! ##### Returns
+//! - `Ok(OffsetDateTime)`: The corresponding datetime in UTC.
+//! - `Err(Box<dyn Error>)`: An error if conversion fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::utils::parsers::timestamp_to_datetime;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let datetime = timestamp_to_datetime(1672531199)?;
+//!     println!("Parsed datetime: {}", datetime);
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### `timestamp_to_localdt`
+//! Converts a UNIX timestamp into a human-readable local datetime string in the format `YYYY-MM-DD HH:MM:SS`.
+//!
+//! ##### Arguments
+//! - `timestamp`: A `u64` representing the UNIX timestamp.
+//!
+//! ##### Returns
+//! - `Ok(String)`: The corresponding local datetime as a string.
+//! - `Err(Box<dyn Error>)`: An error if conversion fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::utils::parsers::timestamp_to_localdt;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let local_datetime = timestamp_to_localdt(1672531199)?;
+//!     println!("Local datetime: {}", local_datetime);
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### `datetime_to_date`
+//! Extracts the date part (`YYYY-MM-DD`) from a datetime string in the format `YYYY-MM-DD HH:MM:SS`.
+//!
+//! ##### Arguments
+//! - `d`: A `String` in the format `YYYY-MM-DD HH:MM:SS`.
+//!
+//! ##### Returns
+//! - `Ok(String)`: The extracted date as a string.
+//! - `Err(Box<dyn Error>)`: An error if parsing fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::utils::parsers::datetime_to_date;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let date = datetime_to_date("2023-01-01 12:00:00".to_string())?;
+//!     println!("Extracted date: {}", date);
+//!     Ok(())
+//! }
+//! ```
+//!
+//! ### `quotes_to_json`
+//! Converts a vector of `Quote` objects (from the `yahoofinance` crate) into a JSON array.
+//!
+//! ##### Arguments
+//! - `data`: A `Vec<Quote>` containing quote data.
+//!
+//! ##### Returns
+//! - `Ok(Value)`: A JSON array representing the quotes.
+//! - `Err(Box<dyn Error>)`: An error if conversion fails.
+//!
+//! ##### Example
+//! ```rust
+//! use rs_quant::utils::parsers::quotes_to_json;
+//! use yahoofinance::Quote;
+//!
+//! fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let quotes = vec![
+//!         Quote {
+//!             timestamp: 1672531199,
+//!             open: 100.0,
+//!             high: 110.0,
+//!             low: 95.0,
+//!             close: 105.0,
+//!             adjclose: 104.0,
+//!             volume: 100000,
+//!         },
+//!     ];
+//!     let json = quotes_to_json(quotes)?;
+//!     println!("JSON data: {}", json);
+//!     Ok(())
+//! }
+//! ```
+
 use serde_json::{json, Value};
 use std::error::Error;
 use time::macros::format_description;

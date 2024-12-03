@@ -105,6 +105,16 @@
 //! }
 //! ```
 //!
+//! ### get_latest_quote
+//! Retrieves the latest quote of an asset
+//!
+//! ##### Arguments
+//! - `ticker`: A `&str` specifying the asset ticker symbol.
+//!
+//! ##### Returns
+//! - `Ok(f64)`: A `f64` number representing the latest price of the asset.
+//! - `Err(Box<dyn Error>)`: An error if retrieval or parsing fails.
+//!
 //! ## Helper Function
 //!
 //! ### `convert_to_datetime_quotes`
@@ -222,6 +232,11 @@ impl YahooFinance {
             ));
         }
         Ok(MultipleQuoteItems { data: r })
+    }
+
+    /// This function retrieve the latest quote
+    pub async fn get_latest_quote(&self, ticker: &str) -> Result<f64, Box<dyn Error>> {
+        Ok(self.get_quotes(ticker, None, None, None, None).await?.last().unwrap().close)
     }
 }
 

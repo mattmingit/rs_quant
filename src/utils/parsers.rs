@@ -11,7 +11,7 @@
 //! - `d`: A `&str` in the format `YYYY-MM-DD`.
 //!
 //! ##### Returns
-//! - `Ok(OffssetDateTime)`: The parsed datetime at midnight UTC.
+//! - `Ok(OffsetDateTime)`: The parsed datetime at midnight UTC.
 //! - `Err(Box<dyn Error>)`: Ane error if parsing fails.
 //!
 //! ##### Example

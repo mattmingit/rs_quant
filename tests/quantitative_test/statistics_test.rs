@@ -19,4 +19,5 @@ async fn test_beta() {
 
     let beta = calculate_beta(&asset_returns, &market_returns);
     assert!(beta.is_ok());
+    assert_ne!(beta.unwrap(), 0.0)
 }

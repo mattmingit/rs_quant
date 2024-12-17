@@ -12,6 +12,7 @@ test = true
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
+chrono = "0.4.39"
 linfa = "0.7.0"
 linfa-linear = "0.7.0"
 ndarray = "0.16.1"

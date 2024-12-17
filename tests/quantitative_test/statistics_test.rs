@@ -17,6 +17,6 @@ async fn test_beta() {
         .unwrap();
     let market_returns = compute_returns(market, ReturnType::Arithmetic).unwrap();
 
-    let beta = calculate_beta(asset_returns, market_returns);
+    let beta = calculate_beta(&asset_returns, &market_returns);
     assert!(beta.is_ok());
 }

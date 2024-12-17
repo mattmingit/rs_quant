@@ -2,26 +2,16 @@ use crate::quantitative::returns::Return;
 use ndarray::Array1;
 
 pub fn calculate_beta(
-    asset_returns: Vec<Return>,
-    market_returns: Vec<Return>,
+    asset_returns: &[Return],
+    market_returns: &[Return],
 ) -> Result<f64, &'static str> {
     if asset_returns.len() != market_returns.len() {
         return Err("Error: asset_returns and market_returns must have same non-zero length.");
     }
 
     // Convert Returns to ndarray Array1<f64>
-    let asset_array: Array1<f64> = Array1::from(
-        asset_returns
-            .iter()
-            .map(|r| r.to_f64())
-            .collect::<Vec<f64>>(),
-    );
-    let market_array: Array1<f64> = Array1::from(
-        market_returns
-            .iter()
-            .map(|r| r.to_f64())
-            .collect::<Vec<f64>>(),
-    );
+    let asset_array: Array1<f64> = Array1::from_iter(asset_returns.iter().map(|r| r.to_f64()));
+    let market_array: Array1<f64> = Array1::from_iter(market_returns.iter().map(|r| r.to_f64()));
 
     // Compute means
     let asset_mean = asset_array.mean().unwrap_or(0.0);

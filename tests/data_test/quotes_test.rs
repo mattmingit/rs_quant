@@ -79,4 +79,3 @@ async fn test_get_latest_quote() {
     let quote = conn.get_latest_quote("NVDA").await;
     assert!(quote.is_ok());
 }
-

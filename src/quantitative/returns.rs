@@ -40,7 +40,7 @@
 //! #### Example
 //! ```rust
 //! use rs_quant::data::quotes::QuoteItem;
-//! use rs_quant::fin_numerical::math::returns::{compute_returns, ReturnType};
+//! use rs_quant::quantitative::returns::{compute_returns, ReturnType};
 //!
 //! let quotes = vec![
 //!     QuoteItem {
@@ -79,7 +79,7 @@
 //!
 //! ### Example
 //! ```rust
-//! use rs_quant::fin_numerical::math::returns::{compute_cumulative_returns, Return};
+//! use rs_quant::quantitative::returns::{compute_cumulative_returns, Return};
 //!
 //! let returns = vec![
 //!     Return {
@@ -113,6 +113,12 @@ pub enum ReturnType {
 pub struct Return {
     pub datetime: String,
     pub asset_return: f64,
+}
+
+impl Return {
+    pub fn to_f64(&self) -> f64 {
+        self.asset_return
+    }
 }
 
 #[allow(dead_code)]
@@ -169,4 +175,15 @@ pub fn compute_cumulative_returns(
         });
     }
     Ok(cumulative)
+}
+
+/// Compute expected market return
+pub fn expected_market_return(market_returns: &Vec<Return>) -> Result<f64, &'static str> {
+    if market_returns.is_empty() {
+        return Err("Market returns data is empty.");
+    }
+
+    let total: f64 = market_returns.iter().map(|r| r.to_f64()).sum();
+    let mean: f64 = total / market_returns.len() as f64;
+    Ok(mean)
 }

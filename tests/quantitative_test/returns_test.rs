@@ -1,7 +1,8 @@
 use rs_quant::data::provider::YahooFinance;
 use rs_quant::data::quotes::QuoteItem;
-use rs_quant::fin_numerical::math::returns::{
-    compute_cumulative_returns, compute_returns, CumulativeReturn, Return, ReturnType,
+use rs_quant::quantitative::returns::{
+    compute_cumulative_returns, compute_returns, expected_market_return, CumulativeReturn, Return,
+    ReturnType,
 };
 
 #[test]
@@ -144,4 +145,17 @@ async fn test_cumulative_returns() {
     for (res, exp) in result.iter().zip(expected.iter()) {
         assert_eq!(res.datetime, exp.datetime);
     }
+}
+
+#[tokio::test]
+async fn test_expected_market_return() {
+    let conn = YahooFinance::connector();
+    let res = conn
+        .get_quotes("^GSPC", None, None, Some("30y"), Some("1mo"))
+        .await
+        .unwrap();
+
+    let returns = compute_returns(res, ReturnType::Arithmetic).unwrap();
+    let expected_market_return = expected_market_return(&returns);
+    assert!(expected_market_return.is_ok());
 }

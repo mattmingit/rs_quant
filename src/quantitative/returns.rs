@@ -101,6 +101,7 @@
 //! - This module assumes `QuoteItem` is defined elsewhere in your project, and includes at least `adjclose` and `datetime` fields.
 
 use crate::data::quotes::QuoteItem;
+use crate::quantitative::traits::{AssetReturn, ReturnDatetime};
 use std::error::Error;
 
 pub enum ReturnType {
@@ -109,14 +110,22 @@ pub enum ReturnType {
 }
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Return {
     pub datetime: String,
     pub asset_return: f64,
 }
 
-impl Return {
-    pub fn to_f64(&self) -> f64 {
+// Implement the `AssetDatetime` trait for the `Return` struct
+impl ReturnDatetime for Return {
+    fn datetime(&self) -> &str {
+        &self.datetime
+    }
+}
+
+// Implement the `AssetReturn` trait for the `Return` struct
+impl AssetReturn for Return {
+    fn asset_return(&self) -> f64 {
         self.asset_return
     }
 }

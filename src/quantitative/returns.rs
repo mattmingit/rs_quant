@@ -194,5 +194,5 @@ pub fn expected_market_return(market_returns: &Vec<Return>) -> Result<f64, &'sta
 
     let total: f64 = market_returns.iter().map(|r| r.asset_return).sum();
     let mean: f64 = total / market_returns.len() as f64;
-    Ok(((1.0 + mean).powf(252f64)) - 1.0)
+    Ok(((1.0 + mean).powf(12f64)) - 1.0)
 }

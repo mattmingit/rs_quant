@@ -124,7 +124,7 @@ async fn test_cumulative_returns() {
         },
     ];
 
-    let expected = vec![
+    let expected = [
         CumulativeReturn {
             datetime: "2023-01-01".to_string(),
             asset_cumulative_returns: 0.01,

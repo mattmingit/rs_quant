@@ -39,3 +39,11 @@ where
     // Step 3: Compute variance
     Ok((&arr - mean).mapv(|x| x * x).sum() / arr.len() as f64)
 }
+
+/// Compute standard deviation
+pub fn compute_standard_deviation<T>(returns: &[T]) -> Result<f64, Box<dyn Error>>
+where
+    T: AssetReturn,
+{
+    Ok(compute_variance(returns)?.sqrt())
+}

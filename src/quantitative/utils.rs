@@ -1,4 +1,3 @@
-use crate::quantitative::returns::Return;
 use crate::quantitative::traits::{AssetReturn, ReturnDatetime};
 use chrono::NaiveDate;
 use std::collections::HashMap;

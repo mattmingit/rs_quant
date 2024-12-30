@@ -176,31 +176,31 @@ impl YahooFinance {
             let start_date = parse_start_date(start_date)?;
             let end_date = parse_end_date(end_date)?;
 
-            return Ok(convert_to_datetime_quotes(
+            return convert_to_datetime_quotes(
                 self.connector
                     .get_quote_history_interval(ticker, start_date, end_date, interval)
                     .await?
                     .quotes()?,
-            )?);
+            );
         }
 
         // Case 2: get data for defined period
         if let Some(period) = period {
-            return Ok(convert_to_datetime_quotes(
+            return convert_to_datetime_quotes(
                 self.connector
                     .get_quote_range(ticker, interval, period)
                     .await?
                     .quotes()?,
-            )?);
+            );
         }
 
         // Default case: return quotes for current date
-        Ok(convert_to_datetime_quotes(
+        convert_to_datetime_quotes(
             self.connector
                 .get_quote_range(ticker, "1m", "1d")
                 .await?
                 .quotes()?,
-        )?)
+        )
     }
 
     /// This function retrieves quote for multiple assets query
@@ -236,7 +236,12 @@ impl YahooFinance {
 
     /// This function retrieve the latest quote
     pub async fn get_latest_quote(&self, ticker: &str) -> Result<f64, Box<dyn Error>> {
-        Ok(self.get_quotes(ticker, None, None, None, None).await?.last().unwrap().close)
+        Ok(self
+            .get_quotes(ticker, None, None, None, None)
+            .await?
+            .last()
+            .unwrap()
+            .close)
     }
 }
 

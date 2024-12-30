@@ -26,7 +26,7 @@
 //!
 //! #### Arguments
 //! - `data`: A `Vec<QuoteItem>` containing the data points (quote items) for calculation.
-//! Each `QuoteItem` must have an `adjclose` (adjusted close price) and a `datetime`.
+//!   Each `QuoteItem` must have an `adjclose` (adjusted close price) and a `datetime`.
 //! - `return_type`: A `ReturnType` enum indicating whether to compute arithmetic or logarithmic returns.
 //!
 //! #### Returns
@@ -187,12 +187,12 @@ pub fn compute_cumulative_returns(
 }
 
 /// Compute expected market return
-pub fn expected_market_return(market_returns: &Vec<Return>) -> Result<f64, &'static str> {
+pub fn expected_market_return(market_returns: &[Return]) -> Result<f64, &'static str> {
     if market_returns.is_empty() {
         return Err("Market returns data is empty.");
     }
 
     let total: f64 = market_returns.iter().map(|r| r.asset_return).sum();
     let mean: f64 = total / market_returns.len() as f64;
-    Ok(((1.0 + mean).powf(12f64)) - 1.0)
+    Ok(((1.0 + mean).powf(12f64)) - 1.0) // This supposes that returns passed as arguments are monthly returns
 }

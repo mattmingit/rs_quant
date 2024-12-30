@@ -60,7 +60,7 @@ async fn get_quotes_with_range_and_interval() {
         .await;
     assert!(res.is_ok());
     let quotes = res.unwrap();
-    assert!(quotes.len() >= 1 && quotes.len() <= 12);
+    assert!(!quotes.is_empty() && quotes.len() <= 12);
 }
 
 #[tokio::test]

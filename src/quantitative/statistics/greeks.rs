@@ -24,23 +24,43 @@ pub fn calculate_beta(
 }
 
 // Calculate alpha of an asset
+// pub fn calculate_alpha(
+//     asset_return: f64,
+//     market_return: f64,
+//     risk_free_rate: f64,
+//     beta: f64,
+// ) -> Result<f64, Box<dyn Error>> {
+//     if asset_return.is_nan() || market_return.is_nan() || risk_free_rate.is_nan() || beta.is_nan() {
+//         return Err("Input values must not be NaN".into());
+//     }
+
+//     if asset_return.is_infinite()
+//         || market_return.is_infinite()
+//         || risk_free_rate.is_infinite()
+//         || beta.is_infinite()
+//     {
+//         return Err("Input values must not be infinite".into());
+//     }
+
+//     Ok(asset_return - (risk_free_rate + (market_return - risk_free_rate) * beta))
+// }
+
 pub fn calculate_alpha(
-    asset_return: f64,
-    market_return: f64,
+    asset_returns: &[Return],
+    market_returns: &[Return],
     risk_free_rate: f64,
-    beta: f64,
 ) -> Result<f64, Box<dyn Error>> {
-    if asset_return.is_nan() || market_return.is_nan() || risk_free_rate.is_nan() || beta.is_nan() {
-        return Err("Input values must not be NaN".into());
-    }
+    // Step 1: Calculate beta
+    let beta = calculate_beta(asset_returns, market_returns)?;
 
-    if asset_return.is_infinite()
-        || market_return.is_infinite()
-        || risk_free_rate.is_infinite()
-        || beta.is_infinite()
-    {
-        return Err("Input values must not be infinite".into());
-    }
+    // Step 2: Compute average asset return (R_a)
+    let asset_ret_avg =
+        asset_returns.iter().map(|r| r.asset_return).sum::<f64>() / asset_returns.len() as f64;
 
-    Ok(asset_return - (risk_free_rate + (market_return - risk_free_rate) * beta))
+    // Step 3: Compute average market return (R_m)
+    let mkt_ret_avg =
+        market_returns.iter().map(|r| r.asset_return).sum::<f64>() / market_returns.len() as f64;
+
+    // Step 4: Compute alpha
+    Ok(asset_ret_avg - (risk_free_rate + (mkt_ret_avg - risk_free_rate) * beta))
 }

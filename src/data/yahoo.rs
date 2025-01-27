@@ -1,9 +1,8 @@
-use std::{collections::HashMap, error::Error};
-
 use crate::commons::{
     date::{datetime_to_date, parse_date, timestamp_to_localdt, DateType},
     parser::round_to_three,
 };
+use std::{collections::HashMap, error::Error};
 use yahoofinance::{Quote, YOptionContract, YahooConnector};
 
 // struct to define connection

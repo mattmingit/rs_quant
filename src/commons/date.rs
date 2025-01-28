@@ -42,6 +42,7 @@ pub fn timestamp_to_localdt(timestamp: u64) -> Result<String, Box<dyn Error>> {
     Ok(dt)
 }
 
+// convert datetime into simple date
 pub fn datetime_to_date(d: String) -> Result<String, Box<dyn Error>> {
     match d.as_str().split_once(" ") {
         Some((date, _time)) => Ok(date.to_string()),

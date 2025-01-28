@@ -1,4 +1,4 @@
-use rs_quant::data::yahoo::{OptionType, Yahoo};
+use rs_quant::data::yahoo::{OptionType, ReturnType, Yahoo};
 
 #[tokio::test]
 async fn get_quotes_without_args() {
@@ -62,4 +62,29 @@ async fn get_latest_quote() {
     let conn = Yahoo::provider();
     let quote = conn.get_latest_quote("NVDA").await;
     assert!(quote.is_ok(), "Error: {:?}", quote);
+}
+
+#[tokio::test]
+async fn compute_returns() {
+    //arithmetic returns
+    let conn = Yahoo::provider();
+    let a = conn
+        .compute_returns("NVDA", "5d", "1d", ReturnType::Arithmetic)
+        .await;
+    assert!(a.is_ok());
+    assert!(!a.unwrap().is_empty());
+
+    // absolute returns
+    let abs = conn
+        .compute_returns("VUAA.MI", "5d", "1d", ReturnType::Absolute)
+        .await;
+    assert!(abs.is_ok());
+    assert!(!abs.unwrap().is_empty());
+
+    // logarithmic returns
+    let l = conn
+        .compute_returns("SP5A.MI", "5d", "1d", ReturnType::Logarithmic)
+        .await;
+    assert!(l.is_ok());
+    assert!(!l.unwrap().is_empty())
 }

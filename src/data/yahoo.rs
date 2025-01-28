@@ -55,6 +55,13 @@ pub enum OptionType {
     Put,
 }
 
+// return type enumerator
+pub enum ReturnType {
+    Logarithmic,
+    Arithmetic,
+    Absolute,
+}
+
 impl Yahoo {
     pub fn provider() -> Self {
         let provider =
@@ -185,6 +192,35 @@ impl Yahoo {
             OptionType::Put => &options.puts,
         };
         convert_to_optioncontract(options)
+    }
+
+    // compute asset returns
+    pub async fn compute_returns(
+        &self,
+        symbol: &str,
+        period: &str,
+        interval: &str,
+        r_type: ReturnType,
+    ) -> Result<Vec<(String, f64)>, Box<dyn Error>> {
+        // get asset price data
+        let data = self
+            .get_quotes(symbol, None, None, Some(period), Some(interval))
+            .await?;
+
+        let mut r = Vec::new();
+        for i in 1..data.len() {
+            let prev_quote = &data[i - 1];
+            let curr_quote = &data[i];
+
+            // calculate the return based on return type
+            let r_val = match r_type {
+                ReturnType::Arithmetic => (curr_quote.adjclose / prev_quote.adjclose) - 1.0,
+                ReturnType::Logarithmic => (curr_quote.adjclose / prev_quote.adjclose).ln(),
+                ReturnType::Absolute => curr_quote.adjclose / prev_quote.adjclose,
+            };
+            r.push((curr_quote.datetime.clone(), r_val));
+        }
+        Ok(r)
     }
 }
 

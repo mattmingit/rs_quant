@@ -1,3 +1,4 @@
+use super::error::YahooErr;
 use crate::commons::{
     date::{datetime_to_date, parse_date, timestamp_to_localdt, DateType},
     parser::round_to_three,
@@ -5,7 +6,7 @@ use crate::commons::{
 use std::{collections::HashMap, error::Error};
 use yahoofinance::{Quote, YOptionContract, YahooConnector};
 
-// struct to define connection
+// struct to model connection with yahoo! finance
 pub struct Yahoo {
     pub provider: YahooConnector,
 }
@@ -62,11 +63,11 @@ pub enum ReturnType {
     Absolute,
 }
 
+// implementation of Yahoo struct
 impl Yahoo {
-    pub fn provider() -> Self {
-        let provider =
-            YahooConnector::new().expect("Failed to build connection with yahoo! finance api.");
-        Self { provider }
+    pub fn provider() -> Result<Self, YahooErr> {
+        let provider = YahooConnector::new().map_err(|_| YahooErr::BuilderFailed)?;
+        Ok(Self { provider })
     }
 
     // get quotation data for single asset query
@@ -77,20 +78,31 @@ impl Yahoo {
         end_date: Option<&str>,
         period: Option<&str>,
         interval: Option<&str>,
-    ) -> Result<Vec<QuoteItem>, Box<dyn Error>> {
+    ) -> Result<Vec<QuoteItem>, YahooErr> {
         // set default interval if not passed as argument
         let interval = interval.unwrap_or("1m");
 
         // case 1: get data for specific date range
         if let (Some(start_date), Some(end_date)) = (start_date, end_date) {
-            let start_dt = parse_date(start_date, DateType::Start)?;
-            let end_dt = parse_date(end_date, DateType::End)?;
+            let start_dt = parse_date(start_date, DateType::Start)
+                .map_err(|_| YahooErr::InvalidDateFormat(start_date.to_string()))?;
+            let end_dt = parse_date(end_date, DateType::End)
+                .map_err(|_| YahooErr::InvalidDateFormat(end_date.to_string()))?;
             return convert_to_quoteitem(
                 self.provider
                     .get_quote_history_interval(symbol, start_dt, end_dt, interval)
-                    .await?
-                    .quotes()?,
-            );
+                    .await
+                    .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                    .quotes()
+                    .map_err(|err| {
+                        if err.to_string().contains("EOF") || err.to_string().contains("empty") {
+                            YahooErr::EmptyDataSet
+                        } else {
+                            YahooErr::InvalidJson
+                        }
+                    })?,
+            )
+            .map_err(|e| YahooErr::DataInconsistency(e.to_string()));
         }
 
         // case 2: get data for defined period
@@ -98,18 +110,36 @@ impl Yahoo {
             return convert_to_quoteitem(
                 self.provider
                     .get_quote_range(symbol, interval, period)
-                    .await?
-                    .quotes()?,
-            );
+                    .await
+                    .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                    .quotes()
+                    .map_err(|err| {
+                        if err.to_string().contains("EOF") || err.to_string().contains("empty") {
+                            YahooErr::EmptyDataSet
+                        } else {
+                            YahooErr::InvalidJson
+                        }
+                    })?,
+            )
+            .map_err(|e| YahooErr::DataInconsistency(e.to_string()));
         }
 
         // default case: get data for current trading day
         convert_to_quoteitem(
             self.provider
                 .get_quote_range(symbol, interval, "1d")
-                .await?
-                .quotes()?,
+                .await
+                .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                .quotes()
+                .map_err(|err| {
+                    if err.to_string().contains("EOF") || err.to_string().contains("empty") {
+                        YahooErr::EmptyDataSet
+                    } else {
+                        YahooErr::InvalidJson
+                    }
+                })?,
         )
+        .map_err(|e| YahooErr::DataInconsistency(e.to_string()))
     }
 
     // get quotation data for multiple assets query
@@ -120,7 +150,7 @@ impl Yahoo {
         end_date: Option<&str>,
         period: Option<&str>,
         interval: Option<&str>,
-    ) -> Result<Vec<MultiQuoteItem>, Box<dyn Error>> {
+    ) -> Result<Vec<MultiQuoteItem>, YahooErr> {
         // initialize results hashmap container
         let mut r: Vec<(String, Vec<QuoteItem>)> = Vec::new();
 
@@ -169,12 +199,14 @@ impl Yahoo {
     }
 
     // get latest quotation for an asset
-    pub async fn get_latest_quote(&self, ticker: &str) -> Result<f64, Box<dyn Error>> {
+    pub async fn get_latest_quote(&self, ticker: &str) -> Result<f64, YahooErr> {
         Ok(round_to_three(
             self.provider
                 .get_latest_quotes(ticker, "1d")
-                .await?
-                .last_quote()?
+                .await
+                .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                .last_quote()
+                .map_err(|e| YahooErr::DataInconsistency(e.to_string()))?
                 .close,
         ))
     }
@@ -184,8 +216,17 @@ impl Yahoo {
         &self,
         ticker: &str,
         option_type: OptionType,
-    ) -> Result<Vec<OptionContract>, Box<dyn Error>> {
-        let r = self.provider.search_options(ticker).await?;
+    ) -> Result<Vec<OptionContract>, YahooErr> {
+        let r = self
+            .provider
+            .search_options(ticker)
+            .await
+            .map_err(|e| YahooErr::Fetchfailed(e.to_string()))?;
+
+        if r.option_chain.result.is_empty() {
+            return Err(YahooErr::EmptyDataSet);
+        }
+
         let options = &r.option_chain.result[0].options[0];
         let options = match option_type {
             OptionType::Call => &options.calls,
@@ -201,16 +242,31 @@ impl Yahoo {
         period: &str,
         interval: &str,
         r_type: ReturnType,
-    ) -> Result<Vec<(String, f64)>, Box<dyn Error>> {
+    ) -> Result<Vec<(String, f64)>, YahooErr> {
         // get asset price data
         let data = self
             .get_quotes(symbol, None, None, Some(period), Some(interval))
             .await?;
 
+        // prevent panic due to out-of-bounds access
+        if data.len() < 2 {
+            return Err(YahooErr::DataInconsistency(format!(
+                "{} data points retrieved, must have at least two elements.",
+                data.len()
+            )));
+        }
+
         let mut r = Vec::new();
         for i in 1..data.len() {
             let prev_quote = &data[i - 1];
             let curr_quote = &data[i];
+
+            if prev_quote.adjclose == 0.0 {
+                return Err(YahooErr::DataInconsistency(format!(
+                    "prev_quote adjclose price is zero at {}, this leads to division errors...",
+                    prev_quote.datetime
+                )));
+            }
 
             // calculate the return based on return type
             let r_val = match r_type {
@@ -245,9 +301,7 @@ pub fn convert_to_quoteitem(quotes: Vec<Quote>) -> Result<Vec<QuoteItem>, Box<dy
 }
 
 // helper function to convert yahoo! finance response into vector
-fn convert_to_optioncontract(
-    options: &[YOptionContract],
-) -> Result<Vec<OptionContract>, Box<dyn Error>> {
+fn convert_to_optioncontract(options: &[YOptionContract]) -> Result<Vec<OptionContract>, YahooErr> {
     Ok(options
         .iter()
         .map(|option| OptionContract {

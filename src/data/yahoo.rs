@@ -279,6 +279,7 @@ impl Yahoo {
         Ok(r)
     }
 
+    // fetch assets and news for asset name given. Returns also results count
     pub async fn search_asset(self, name: &str) -> Result<YSearchResult, YahooErr> {
         Ok(self
             .provider

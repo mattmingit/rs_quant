@@ -1,6 +1,13 @@
 name: Auto Merge PR
 
 on:
+  workflow_run:
+    workflows:
+      - "rs-quant"
+    types:
+      - completed
+  workflow_dispatch:
+
   pull_request:
     types: [opened, synchronize, reopened, labeled]
 
@@ -14,6 +21,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Wait for 2 minutes before checking PR
+        run: sleep 120 # wait 120 seconds (2 minutes)
 
       - name: Install GitHub CLI
         run: |

@@ -143,3 +143,9 @@ async fn compute_returns() {
     assert!(l.is_ok());
     assert!(!l.unwrap().is_empty())
 }
+
+#[tokio::test]
+async fn search_asset() {
+    let conn = Yahoo::provider().unwrap();
+    assert!(conn.search_asset("AAPL").await.is_ok());
+}

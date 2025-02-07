@@ -1,7 +1,7 @@
 <h1 align="center">
     <img src="./assets/rs-quant-logo.png" width="100" alt="rs-quant-logo"/>
     <br/>
-    rs-quant 
+    rs-quant
 </h1>
 
 <p>

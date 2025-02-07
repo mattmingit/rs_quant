@@ -40,4 +40,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr create --base main --head dev --title "$MESSAGE" --body "$MESSAGE"
+          gh pr create --base main --head dev --title "$MESSAGE" --body "$MESSAGE" --label "passing"

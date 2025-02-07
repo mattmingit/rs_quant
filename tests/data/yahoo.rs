@@ -1,8 +1,63 @@
-use rs_quant::data::yahoo::{OptionType, ReturnType, Yahoo};
+use rs_quant::data::{
+    error::YahooErr,
+    yahoo::{OptionType, ReturnType, Yahoo},
+};
+
+#[tokio::test]
+async fn fetch_failed() {
+    let conn = Yahoo::provider().unwrap();
+    let r = conn
+        .get_quotes("INVALID_SYMBOL", None, None, None, None)
+        .await;
+    assert!(
+        matches!(r, Err(YahooErr::Fetchfailed(_))),
+        "error result: {:?}",
+        r
+    )
+}
+
+// #[tokio::test] // failing because query returns fetch failed error
+// async fn invalid_json() {
+//     let conn = Yahoo::provider().unwrap();
+//     let r = conn
+//         .get_quotes("AAPL", None, None, None, Some("invalid-interval"))
+//         .await;
+//     assert!(
+//         matches!(r, Err(YahooErr::InvalidJson)),
+//         "error result: {:?}",
+//         r
+//     )
+// }
+
+// #[tokio::test] // failing, prints correct dataset with correct dates. maybe checks already made convert to default case
+// async fn invalid_dateformat() {
+//     let conn = Yahoo::provider().unwrap();
+//     let r = conn
+//         .get_quotes("AAPL", Some("invalid-date"), None, None, None)
+//         .await;
+//     assert!(
+//         matches!(r, Err(YahooErr::InvalidDateFormat(_))),
+//         "error result: {:?}",
+//         r
+//     )
+// }
+
+// #[tokio::test] // failing because query returns fetch failed error
+// async fn empty_dataset() {
+//     let conn = Yahoo::provider().unwrap();
+//     let r = conn
+//         .get_quotes("empty_simbol", None, None, None, None)
+//         .await;
+//     assert!(
+//         matches!(r, Err(YahooErr::EmptyDataSet)),
+//         "error result: {:?}",
+//         r
+//     )
+// }
 
 #[tokio::test]
 async fn get_quotes_without_args() {
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let res = conn.get_quotes("VUAA.MI", None, None, None, None).await;
     assert!(res.is_ok(), "Error: {:?}", res);
     assert!(!res.unwrap().is_empty())
@@ -10,7 +65,7 @@ async fn get_quotes_without_args() {
 
 #[tokio::test]
 async fn get_quotes_with_date_range() {
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let res = conn
         .get_quotes(
             "VUAA.MI",
@@ -26,7 +81,7 @@ async fn get_quotes_with_date_range() {
 
 #[tokio::test]
 async fn get_quotes_with_period() {
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let res = conn
         .get_quotes("AAPL", None, None, Some("5d"), Some("1d"))
         .await;
@@ -37,7 +92,7 @@ async fn get_quotes_with_period() {
 #[tokio::test]
 async fn get_multiple_quotes() {
     let tickers = vec!["NVDA", "SWDA.MI", "VUAA.L", "IBGX.AS"];
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let res = conn
         .get_multiple_quotes(tickers, None, None, Some("5d"), Some("1d"))
         .await;
@@ -47,7 +102,7 @@ async fn get_multiple_quotes() {
 
 #[tokio::test]
 async fn get_options() {
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let call = conn.get_options("AAPL", OptionType::Call).await;
     assert!(call.is_ok(), "Error: {:?}", call);
     assert!(!call.unwrap().is_empty());
@@ -59,7 +114,7 @@ async fn get_options() {
 
 #[tokio::test]
 async fn get_latest_quote() {
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let quote = conn.get_latest_quote("NVDA").await;
     assert!(quote.is_ok(), "Error: {:?}", quote);
 }
@@ -67,7 +122,7 @@ async fn get_latest_quote() {
 #[tokio::test]
 async fn compute_returns() {
     //arithmetic returns
-    let conn = Yahoo::provider();
+    let conn = Yahoo::provider().unwrap();
     let a = conn
         .compute_returns("NVDA", "5d", "1d", ReturnType::Arithmetic)
         .await;

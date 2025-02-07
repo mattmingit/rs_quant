@@ -22,9 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for 2 minutes before checking PR
-        run: sleep 120 # wait 120 seconds (2 minutes)
-
       - name: Install GitHub CLI
         run: |
           sudo apt update

@@ -4,7 +4,7 @@ use crate::commons::{
     parser::round_to_three,
 };
 use std::{collections::HashMap, error::Error};
-use yahoofinance::{Quote, YOptionContract, YahooConnector};
+use yahoofinance::{Quote, YOptionContract, YSearchResult, YahooConnector};
 
 // struct to model connection with yahoo! finance
 pub struct Yahoo {
@@ -277,6 +277,14 @@ impl Yahoo {
             r.push((curr_quote.datetime.clone(), r_val));
         }
         Ok(r)
+    }
+
+    pub async fn search_asset(self, name: &str) -> Result<YSearchResult, YahooErr> {
+        Ok(self
+            .provider
+            .search_ticker(name)
+            .await
+            .map_err(|e| YahooErr::Fetchfailed(e.to_string()))?)
     }
 }
 

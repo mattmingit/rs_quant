@@ -35,6 +35,7 @@ pub trait Statistic {
     fn variance(&self, v_type: VarType) -> Result<f64, EmptyInput>;
     fn std_dev(&self, v_type: VarType) -> Result<f64, EmptyInput>;
     fn covariance(&self, arr: &Self) -> Result<f64, MultiInputErr>;
+    fn pearson_corr(&self, arr: &Self) -> Result<f64, MultiInputErr>;
     fn kurt(&self) -> Result<f64, EmptyInput>;
     fn skew(&self) -> Result<f64, EmptyInput>;
 }
@@ -141,6 +142,24 @@ impl Statistic for Array1<f64> {
         let arr2 = stack![Axis(0), self.view(), arr.view()];
         let cov_m = arr2.cov(1.).map_err(|_| MultiInputErr::EmptyInput)?;
         Ok(cov_m[(0, 1)])
+    }
+
+    fn pearson_corr(&self, arr: &Self) -> Result<f64, MultiInputErr> {
+        if self.is_empty() || arr.is_empty() {
+            return Err(MultiInputErr::EmptyInput);
+        }
+        if self.shape() != arr.shape() {
+            return Err(MultiInputErr::ShapeMismatch(ShapeMismatch {
+                f_shape: self.shape().to_vec(),
+                s_shape: arr.shape().to_vec(),
+            }));
+        }
+
+        let arr2 = stack![Axis(0), self.view(), arr.view()];
+        let pearson = arr2
+            .pearson_correlation()
+            .map_err(|_| MultiInputErr::EmptyInput)?;
+        Ok(pearson[(0, 1)])
     }
 
     // compute kurtosis

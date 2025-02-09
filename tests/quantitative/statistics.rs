@@ -200,6 +200,40 @@ fn covariance() {
 }
 
 #[test]
+fn pearson_corr() {
+    // test error case
+    let arr1 = array![];
+    let arr2 = array![];
+    assert!(arr1.pearson_corr(&arr2).is_err());
+
+    let arr1 = array![1.0, 2.0, 3.0];
+    let arr2 = array![2.0, 4.0];
+    assert!(arr1.pearson_corr(&arr2).is_err());
+
+    // test pearson correlation valid
+    let arr1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
+    let arr2 = array![2.0, 4.0, 6.0, 8.0, 10.0];
+    assert!(arr1.pearson_corr(&arr2).is_ok());
+    assert_approx!(arr1.pearson_corr(&arr2).unwrap(), 1.0, EPSILON);
+
+    // test pearson correlation negative
+    let arr1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
+    let arr2 = array![10.0, 8.0, 6.0, 4.0, 2.0];
+    assert!(arr1.pearson_corr(&arr2).is_ok());
+    assert_approx!(arr1.pearson_corr(&arr2).unwrap(), -1.0, EPSILON);
+
+    // test pearson correlation (low correlation)
+    let arr1 = array![1.0, 2.0, 3.0, 4.0, 5.0];
+    let arr2 = array![10.0, 20.0, 15.0, 0.0, 25.0];
+    assert!(arr1.pearson_corr(&arr2).is_ok());
+    assert_approx!(
+        arr1.pearson_corr(&arr2).unwrap(),
+        0.16439898730535726,
+        EPSILON
+    )
+}
+
+#[test]
 fn kurtosis() {
     // test empty
     let e_arr = array![];

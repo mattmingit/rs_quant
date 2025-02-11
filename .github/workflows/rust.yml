@@ -25,6 +25,9 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
+      - name: Set DATABASE_URL env var
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+
       - name: Build
         run: cargo build --verbose
 

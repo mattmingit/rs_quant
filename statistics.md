@@ -2,7 +2,6 @@ Absolutely! Using both `ndarray` + `ndarray-stats` and `statrs` together is a **
 
 Here’s how you can effectively use both libraries in your quantitative finance library:
 
----
 
 ### **`ndarray` + `ndarray-stats`**
 #### **Use Cases**:

@@ -13,6 +13,7 @@
   - [ ] morningstar.
 - [ ] **portfolio data**: holdings, wights, returns, and risk metrics.
 - [ ] **custom data loader**: support for CSV, JSON, Parquet, database (MySql and postgres), nosql databases sources.
+- [x] **database support**: support connection with database.
 
 ## 2. math foundation
 - [ ] **linear algebra**: matrix operations, vector calculus (`ndarray` crate should be used).

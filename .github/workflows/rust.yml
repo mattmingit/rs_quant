@@ -12,6 +12,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: true
 
 jobs:
   build:
@@ -25,8 +26,16 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
-      - name: Set DATABASE_URL env var
-        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli
+
+      - name: Cache SQLx Prepared Data # ✅ Cache entire `.sqlx/` directory
+        uses: actions/cache@v3
+        with:
+          path: .sqlx/ # ✅ Cache the entire .sqlx directory
+          key: ${{ runner.os }}-sqlx-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sqlx-
 
       - name: Build
         run: cargo build --verbose

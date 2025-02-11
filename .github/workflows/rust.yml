@@ -26,25 +26,22 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
-      - name: Install sqlx-cli
-        run: cargo install sqlx-cli
+      # - name: Install SQLx CLI
+      #   run: cargo install sqlx-cli
 
-      - name: Set up Database URL
-        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
-
-      - name: Cache SQLx Prepared Data # ✅ Cache entire `.sqlx/` directory
-        uses: actions/cache@v3
-        with:
-          path: .sqlx/ # ✅ Cache the entire .sqlx directory
-          key: ${{ runner.os }}-sqlx-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-sqlx-
+      # - name: Cache SQLx Metadata # ✅ Use cached .sqlx directory (if available)
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: .sqlx/
+      #     key: ${{ runner.os }}-sqlx-${{ hashFiles('**/Cargo.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-sqlx-
 
       - name: Build
         run: cargo build --verbose
 
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --verbose --no-default-features
 
       - name: Get latest commit message
         id: commit

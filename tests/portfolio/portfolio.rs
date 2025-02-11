@@ -1,4 +1,6 @@
+#[allow(unused_imports)]
 use rs_quant::database::connection::DbConnection;
+#[allow(unused_imports)]
 use rs_quant::database::queries::portfolio_table;
 use rs_quant::portfolio::portfolio::Portfolio;
 
@@ -20,6 +22,7 @@ fn default_portfolio() {
     )
 }
 
+#[cfg(feature = "db_tests")]
 #[tokio::test]
 async fn from_db() {
     let pool = DbConnection::<sqlx::MySql>::new().await.unwrap();
@@ -45,6 +48,7 @@ async fn from_db() {
     assert_eq!(six_pos.buy_value, 1474.230);
 }
 
+#[cfg(feature = "db_tests")]
 #[tokio::test]
 async fn total_investment() {
     let pool = DbConnection::<sqlx::MySql>::new().await.unwrap();
@@ -54,6 +58,7 @@ async fn total_investment() {
     assert_eq!(p.total_investments(), 8391.47);
 }
 
+#[cfg(feature = "db_tests")]
 #[tokio::test]
 async fn total_market_val() {
     let pool = DbConnection::<sqlx::MySql>::new().await.unwrap();
@@ -63,6 +68,7 @@ async fn total_market_val() {
     assert_eq!(p.total_mkt_val(), 9483.07);
 }
 
+#[cfg(feature = "db_tests")]
 #[tokio::test]
 async fn total_pl() {
     let pool = DbConnection::<sqlx::MySql>::new().await.unwrap();

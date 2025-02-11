@@ -32,3 +32,6 @@ time = { version = "0.3.37", features = [
 ] }
 tokio = { version = "1.43.0", features = ["full"] }
 yahoofinance = { package = "yahoo_finance_api", git = "https://github.com/mattmingit/yahoo_finance_api.git", branch = "master" }
+
+[features]
+db_tests = []

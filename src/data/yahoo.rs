@@ -1,10 +1,33 @@
-use super::error::YahooErr;
+//use super::error::YahooErr;
 use crate::commons::{
     date::{datetime_to_date, parse_date, timestamp_to_localdt, DateType},
     parser::round_to_three,
 };
 use std::{collections::HashMap, error::Error};
+use thiserror::Error;
 use yahoofinance::{Quote, YOptionContract, YSearchResult, YahooConnector};
+
+#[derive(Debug, Error)]
+pub enum YahooErr {
+    #[error("Failed to fetch data from yahoo! finance: {0}")]
+    FetchFailed(String),
+    #[error("Failed to deserialize from yahoo! finance: {0}")]
+    DeserializationFailed(#[from] serde_json::Error),
+    #[error("Request to yahoo! finance servers failed: {0}")]
+    RequestFailed(#[from] reqwest::Error),
+    #[error("Yahoo! finance returned invalid JSON format.")]
+    InvalidJson,
+    #[error("Yahoo! finance returned an empty data set.")]
+    EmptyDataSet,
+    #[error("Yahoo! Finance returned inconsistent data: {0}")]
+    DataInconsistency(String),
+    #[error("Failed to build Yahoo! Finance client.")]
+    BuilderFailed,
+    #[error(
+        "Failed to parse Yahoo! Finance date format. Response returned invalid date format: {0}"
+    )]
+    InvalidDateFormat(String),
+}
 
 // struct to model connection with yahoo! finance
 pub struct Yahoo {
@@ -92,7 +115,7 @@ impl Yahoo {
                 self.provider
                     .get_quote_history_interval(symbol, start_dt, end_dt, interval)
                     .await
-                    .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                    .map_err(|err| YahooErr::FetchFailed(err.to_string()))?
                     .quotes()
                     .map_err(|err| {
                         if err.to_string().contains("EOF") || err.to_string().contains("empty") {
@@ -111,7 +134,7 @@ impl Yahoo {
                 self.provider
                     .get_quote_range(symbol, interval, period)
                     .await
-                    .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                    .map_err(|err| YahooErr::FetchFailed(err.to_string()))?
                     .quotes()
                     .map_err(|err| {
                         if err.to_string().contains("EOF") || err.to_string().contains("empty") {
@@ -129,7 +152,7 @@ impl Yahoo {
             self.provider
                 .get_quote_range(symbol, interval, "1d")
                 .await
-                .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                .map_err(|err| YahooErr::FetchFailed(err.to_string()))?
                 .quotes()
                 .map_err(|err| {
                     if err.to_string().contains("EOF") || err.to_string().contains("empty") {
@@ -204,7 +227,7 @@ impl Yahoo {
             self.provider
                 .get_latest_quotes(ticker, "1d")
                 .await
-                .map_err(|err| YahooErr::Fetchfailed(err.to_string()))?
+                .map_err(|err| YahooErr::FetchFailed(err.to_string()))?
                 .last_quote()
                 .map_err(|e| YahooErr::DataInconsistency(e.to_string()))?
                 .close,
@@ -221,7 +244,7 @@ impl Yahoo {
             .provider
             .search_options(ticker)
             .await
-            .map_err(|e| YahooErr::Fetchfailed(e.to_string()))?;
+            .map_err(|e| YahooErr::FetchFailed(e.to_string()))?;
 
         if r.option_chain.result.is_empty() {
             return Err(YahooErr::EmptyDataSet);
@@ -280,11 +303,10 @@ impl Yahoo {
     }
 
     pub async fn search_asset(self, name: &str) -> Result<YSearchResult, YahooErr> {
-        Ok(self
-            .provider
+        self.provider
             .search_ticker(name)
             .await
-            .map_err(|e| YahooErr::Fetchfailed(e.to_string()))?)
+            .map_err(|e| YahooErr::FetchFailed(e.to_string()))
     }
 }
 

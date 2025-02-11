@@ -1,7 +1,4 @@
-use rs_quant::data::{
-    error::YahooErr,
-    yahoo::{OptionType, ReturnType, Yahoo},
-};
+use rs_quant::data::yahoo::{OptionType, ReturnType, Yahoo, YahooErr};
 
 #[tokio::test]
 async fn fetch_failed() {
@@ -10,7 +7,7 @@ async fn fetch_failed() {
         .get_quotes("INVALID_SYMBOL", None, None, None, None)
         .await;
     assert!(
-        matches!(r, Err(YahooErr::Fetchfailed(_))),
+        matches!(r, Err(YahooErr::FetchFailed(_))),
         "error result: {:?}",
         r
     )

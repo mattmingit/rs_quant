@@ -74,18 +74,12 @@ pub enum MultiInputErr {
 impl MultiInputErr {
     // returns whether `self` is the `EmptyInput` variant
     pub fn is_empty_input(&self) -> bool {
-        match self {
-            MultiInputErr::EmptyInput => true,
-            _ => false,
-        }
+        matches!(self, MultiInputErr::EmptyInput)
     }
 
     // returns whether `self` is the `ShapeMismatch` variant
     pub fn is_shapemismatch(&self) -> bool {
-        match self {
-            MultiInputErr::ShapeMismatch(_) => true,
-            _ => false,
-        }
+        matches!(self, MultiInputErr::ShapeMismatch(_))
     }
 }
 

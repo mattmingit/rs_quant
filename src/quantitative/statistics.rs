@@ -169,6 +169,6 @@ impl Statistic for Array1<f64> {
 
     // compute skewness
     fn skew(&self) -> Result<f64, EmptyInput> {
-        Ok(self.skewness().map_err(|_| EmptyInput)?)
+        self.skewness().map_err(|_| EmptyInput)
     }
 }

@@ -2,15 +2,26 @@
 name = "rs-quant"
 version = "0.1.0"
 edition = "2021"
+authors = ["Matteo Montanari"]
+description = "rs-quant is a rust library designed for quantitative finance enthusiasts. It provides a set of models, formulas, and tools to perform financial analysis for multiple financial instruments"
 
 [dependencies]
+chrono = { version = "0.4.39", features = ["serde"] }
+dotenvy = "0.15.7"
 ndarray = "0.16.1"
 ndarray-stats = "0.6.0"
 noisy_float = "0.2.0"
 num = "0.4.3"
 reqwest = "0.12.12"
+rust_decimal = { version = "1.36.0", features = ["serde"] }
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.137"
+sqlx = { version = "0.8.3", features = [
+    "mysql",
+    "runtime-tokio-rustls",
+    "chrono",
+    "rust_decimal",
+] }
 statrs = "0.18.0"
 thiserror = "2.0.11"
 time = { version = "0.3.37", features = [

@@ -302,6 +302,7 @@ impl Yahoo {
         Ok(r)
     }
 
+    // search asset
     pub async fn search_asset(self, name: &str) -> Result<YSearchResult, YahooErr> {
         self.provider
             .search_ticker(name)

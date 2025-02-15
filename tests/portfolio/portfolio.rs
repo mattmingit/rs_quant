@@ -71,3 +71,12 @@ async fn total_pl() {
 
     assert_eq!(p.total_pl(), 1091.6000000000001);
 }
+
+#[tokio::test]
+async fn weights() {
+    let pool = DbConnection::<sqlx::MySql>::new().await.unwrap();
+    let data = portfolio_table(&pool).await.unwrap();
+    let mut portfolio = Portfolio::from_database(data);
+    portfolio.weights();
+    assert_ne!(portfolio.positions[0].weight, 0f64);
+}

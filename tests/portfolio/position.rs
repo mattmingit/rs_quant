@@ -20,7 +20,7 @@ fn position_new() {
     assert_eq!(pos.buy_value, 15000.0);
 
     // check default values are correct
-    assert_eq!(pos.market_price, 0.0);
+    assert_eq!(pos.market_value, 0.0);
     assert_eq!(pos.equity, 0.0);
     assert_eq!(pos.pl, 0.0);
     assert_eq!(pos.pl_pct, 0.0)
@@ -35,14 +35,15 @@ async fn update_mkt_price() {
         buy_date: "2023-12-01".to_string(),
         buy_price: 150.0,
         buy_value: 1500.0,
-        market_price: 0.0,
+        market_value: 0.0,
         equity: 0.0,
         pl: 0.0,
         pl_pct: 0.0,
+        weight: 0.0,
     };
 
     position.update_mkt_price().await.unwrap();
-    assert_ne!(position.market_price, 0.0);
+    assert_ne!(position.market_value, 0.0);
 }
 
 #[test]
@@ -54,10 +55,11 @@ fn pl() {
         buy_date: "2023-12-01".to_string(),
         buy_price: 150.0,
         buy_value: 1500.0,
-        market_price: 200.0,
+        market_value: 200.0,
         equity: 2000.0,
         pl: 0.0,
         pl_pct: 0.0,
+        weight: 0.0,
     };
 
     let _ = position.pl();
@@ -73,10 +75,11 @@ fn pl_pct() {
         buy_date: "2023-12-01".to_string(),
         buy_price: 150.0,
         buy_value: 1500.0,
-        market_price: 200.0,
+        market_value: 200.0,
         equity: 2000.0,
         pl: 500.0,
         pl_pct: 0.0,
+        weight: 0.0,
     };
 
     let _ = position.pl_pct();

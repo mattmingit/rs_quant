@@ -10,10 +10,11 @@ pub struct Position {
     pub buy_date: String,
     pub buy_price: f64,
     pub buy_value: f64,
-    pub market_price: f64,
+    pub market_value: f64,
     pub equity: f64,
     pub pl: f64,
     pub pl_pct: f64,
+    pub weight: f64,
 }
 
 impl Position {
@@ -33,10 +34,11 @@ impl Position {
             buy_date: buy_date.to_string(),
             buy_price,
             buy_value,
-            market_price: 0.0,
+            market_value: 0.0,
             equity: 0.0,
             pl: 0.0,
             pl_pct: 0.0,
+            weight: 0.0,
         }
     }
 
@@ -45,7 +47,7 @@ impl Position {
         let conn = Yahoo::provider()?;
         match conn.get_latest_quote(&self.symbol).await {
             Ok(p) => {
-                self.market_price = p;
+                self.market_value = p;
                 println!("Seuccessfully updated market price for {}", self.symbol);
                 Ok(())
             }
@@ -63,7 +65,7 @@ impl Position {
 
     // calculate position equity (current market value of the position)
     pub fn equity(&mut self) {
-        self.equity = self.market_price * self.quantity as f64
+        self.equity = self.market_value * self.quantity as f64
     }
 
     // calculate profit and loss

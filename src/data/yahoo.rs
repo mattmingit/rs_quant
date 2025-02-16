@@ -3,6 +3,8 @@ use crate::commons::{
     date::{datetime_to_date, parse_date, timestamp_to_localdt, DateType},
     parser::round_to_three,
 };
+use ndarray::Array1;
+use sqlx::Result;
 use std::{collections::HashMap, error::Error};
 use thiserror::Error;
 use yahoofinance::{Quote, YOptionContract, YSearchResult, YahooConnector};
@@ -79,13 +81,6 @@ pub enum OptionType {
     Put,
 }
 
-// return type enumerator
-pub enum ReturnType {
-    Logarithmic,
-    Arithmetic,
-    Absolute,
-}
-
 // implementation of Yahoo struct
 impl Yahoo {
     pub fn provider() -> Result<Self, YahooErr> {
@@ -101,7 +96,7 @@ impl Yahoo {
         end_date: Option<&str>,
         period: Option<&str>,
         interval: Option<&str>,
-    ) -> Result<Vec<QuoteItem>, YahooErr> {
+    ) -> Result<Array1<QuoteItem>, YahooErr> {
         // set default interval if not passed as argument
         let interval = interval.unwrap_or("1m");
 
@@ -173,7 +168,7 @@ impl Yahoo {
         end_date: Option<&str>,
         period: Option<&str>,
         interval: Option<&str>,
-    ) -> Result<Vec<MultiQuoteItem>, YahooErr> {
+    ) -> Result<Array1<MultiQuoteItem>, YahooErr> {
         // initialize results hashmap container
         let mut r: Vec<(String, Vec<QuoteItem>)> = Vec::new();
 
@@ -218,7 +213,7 @@ impl Yahoo {
         // sort the dynamic_quotes by date (if needed)
         m_quotes.sort_by(|a, b| a.date.cmp(&b.date));
 
-        Ok(m_quotes)
+        Ok(Array1::from_vec(m_quotes))
     }
 
     // get latest quotation for an asset
@@ -239,7 +234,7 @@ impl Yahoo {
         &self,
         ticker: &str,
         option_type: OptionType,
-    ) -> Result<Vec<OptionContract>, YahooErr> {
+    ) -> Result<Array1<OptionContract>, YahooErr> {
         let r = self
             .provider
             .search_options(ticker)
@@ -258,50 +253,6 @@ impl Yahoo {
         convert_to_optioncontract(options)
     }
 
-    // compute asset returns
-    pub async fn compute_returns(
-        &self,
-        symbol: &str,
-        period: &str,
-        interval: &str,
-        r_type: ReturnType,
-    ) -> Result<Vec<(String, f64)>, YahooErr> {
-        // get asset price data
-        let data = self
-            .get_quotes(symbol, None, None, Some(period), Some(interval))
-            .await?;
-
-        // prevent panic due to out-of-bounds access
-        if data.len() < 2 {
-            return Err(YahooErr::DataInconsistency(format!(
-                "{} data points retrieved, must have at least two elements.",
-                data.len()
-            )));
-        }
-
-        let mut r = Vec::new();
-        for i in 1..data.len() {
-            let prev_quote = &data[i - 1];
-            let curr_quote = &data[i];
-
-            if prev_quote.adjclose == 0.0 {
-                return Err(YahooErr::DataInconsistency(format!(
-                    "prev_quote adjclose price is zero at {}, this leads to division errors...",
-                    prev_quote.datetime
-                )));
-            }
-
-            // calculate the return based on return type
-            let r_val = match r_type {
-                ReturnType::Arithmetic => (curr_quote.adjclose / prev_quote.adjclose) - 1.0,
-                ReturnType::Logarithmic => (curr_quote.adjclose / prev_quote.adjclose).ln(),
-                ReturnType::Absolute => curr_quote.adjclose / prev_quote.adjclose,
-            };
-            r.push((curr_quote.datetime.clone(), r_val));
-        }
-        Ok(r)
-    }
-
     // search asset
     pub async fn search_asset(self, name: &str) -> Result<YSearchResult, YahooErr> {
         self.provider
@@ -312,30 +263,31 @@ impl Yahoo {
 }
 
 // helper function to convert yaho! finance response into vector
-pub fn convert_to_quoteitem(quotes: Vec<Quote>) -> Result<Vec<QuoteItem>, Box<dyn Error>> {
-    quotes
-        .into_iter()
-        .map(|q| {
-            let datetime = timestamp_to_localdt(q.timestamp)?;
-
-            Ok(QuoteItem {
-                datetime,
-                open: round_to_three(q.open),
-                high: round_to_three(q.high),
-                low: round_to_three(q.low),
-                close: round_to_three(q.close),
-                adjclose: round_to_three(q.adjclose),
-                volume: q.volume,
+fn convert_to_quoteitem(quotes: Vec<Quote>) -> Result<Array1<QuoteItem>, Box<dyn Error>> {
+    Ok(Array1::from_iter(
+        quotes
+            .into_iter()
+            .map(|q| {
+                let datetime = timestamp_to_localdt(q.timestamp)?;
+                Ok(QuoteItem {
+                    datetime,
+                    open: round_to_three(q.open),
+                    high: round_to_three(q.high),
+                    low: round_to_three(q.low),
+                    close: round_to_three(q.close),
+                    adjclose: round_to_three(q.adjclose),
+                    volume: q.volume,
+                })
             })
-        })
-        .collect()
+            .collect::<Result<Vec<QuoteItem>, Box<dyn Error>>>()?,
+    ))
 }
 
-// helper function to convert yahoo! finance response into vector
-fn convert_to_optioncontract(options: &[YOptionContract]) -> Result<Vec<OptionContract>, YahooErr> {
-    Ok(options
-        .iter()
-        .map(|option| OptionContract {
+fn convert_to_optioncontract(
+    options: &[YOptionContract],
+) -> Result<Array1<OptionContract>, YahooErr> {
+    Ok(Array1::from_iter(options.iter().map(|option| {
+        OptionContract {
             contract_symbol: option.contract_symbol.clone(),
             strike: option.strike,
             currency: option.currency.clone(),
@@ -351,6 +303,6 @@ fn convert_to_optioncontract(options: &[YOptionContract]) -> Result<Vec<OptionCo
             last_trade_date: option.last_trade_date,
             implied_volatility: option.implied_volatility,
             in_the_money: option.in_the_money,
-        })
-        .collect())
+        }
+    })))
 }

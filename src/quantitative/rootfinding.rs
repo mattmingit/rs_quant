@@ -201,12 +201,7 @@ impl RootFinding for BrentsMethod {
             return Err(RootFindingError::InvalidInterval);
         }
 
-        let root = find_root_brent(
-            a,
-            b,
-            |x| f(x),
-            &mut SimpleConvergency { eps: tol, max_iter },
-        );
+        let root = find_root_brent(a, b, f, &mut SimpleConvergency { eps: tol, max_iter });
         match root {
             Ok(r) => Ok(r),
             Err(_) => Err(RootFindingError::NoConvergence),

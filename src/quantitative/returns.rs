@@ -22,6 +22,8 @@ pub enum ReturnType {
     Logarithmic,
 }
 
+type MultiquoteReturns = (String, HashMap<String, f64>);
+
 pub trait Returns {
     fn returns(&self, r_type: ReturnType) -> Result<Array1<(String, f64)>, ReturnsError>;
     fn cumulative_returns(&self, r_type: ReturnType)
@@ -29,7 +31,11 @@ pub trait Returns {
     fn returns_multiquote(
         &self,
         r_type: ReturnType,
-    ) -> Result<Array1<(String, HashMap<String, f64>)>, ReturnsError>;
+    ) -> Result<Array1<MultiquoteReturns>, ReturnsError>;
+    fn cumulative_returns_multiquote(
+        &self,
+        r_type: ReturnType,
+    ) -> Result<Array1<MultiquoteReturns>, ReturnsError>;
 }
 
 impl Returns for Array1<QuoteItem> {
@@ -46,9 +52,9 @@ impl Returns for Array1<QuoteItem> {
             }
 
             let r_val = match r_type {
-                ReturnType::Arithmetic => (&self[i].adjclose / &self[i - 1].adjclose) - 1.0,
-                ReturnType::Logarithmic => (&self[i].adjclose / &self[i - 1].adjclose).ln(),
-                ReturnType::Absolute => &self[i].adjclose / &self[i - 1].adjclose,
+                ReturnType::Arithmetic => (self[i].adjclose / self[i - 1].adjclose) - 1.0,
+                ReturnType::Logarithmic => (self[i].adjclose / self[i - 1].adjclose).ln(),
+                ReturnType::Absolute => self[i].adjclose / self[i - 1].adjclose,
             };
             r[i - 1] = (self[i].datetime.clone(), round_to_four(r_val));
         }
@@ -64,7 +70,7 @@ impl Returns for Array1<QuoteItem> {
 
         let mut c_val = 0.0;
         for i in 0..ret.len() {
-            c_val += ret[i].1;
+            c_val = (1.0 + c_val) * (1.0 + ret[i].1) - 1.0;
             c_ret[i] = (ret[i].0.clone(), round_to_four(c_val))
         }
         Ok(c_ret)
@@ -72,6 +78,16 @@ impl Returns for Array1<QuoteItem> {
 
     #[allow(unused_variables)]
     fn returns_multiquote(
+        &self,
+        r_type: ReturnType,
+    ) -> Result<Array1<(String, HashMap<String, f64>)>, ReturnsError> {
+        Err(ReturnsError::NotImplementedFor(
+            "Array1<QuoteItem>".to_string(),
+        ))
+    }
+
+    #[allow(unused_variables)]
+    fn cumulative_returns_multiquote(
         &self,
         r_type: ReturnType,
     ) -> Result<Array1<(String, HashMap<String, f64>)>, ReturnsError> {
@@ -126,5 +142,27 @@ impl Returns for Array1<MultiQuoteItem> {
             r[i - 1] = (curr.date.clone(), ret_map);
         }
         Ok(r)
+    }
+
+    fn cumulative_returns_multiquote(
+        &self,
+        r_type: ReturnType,
+    ) -> Result<Array1<(String, HashMap<String, f64>)>, ReturnsError> {
+        let ret = self.returns_multiquote(r_type)?;
+
+        let mut cum_arr = Array1::from_elem(ret.len(), (String::new(), HashMap::new()));
+        let mut cum_map: HashMap<String, f64> = HashMap::new();
+
+        for (i, (d, r_map)) in ret.iter().enumerate() {
+            let mut curr = HashMap::new();
+            for (t, r_val) in r_map.iter() {
+                let cum_entry = cum_map.entry(t.clone()).or_insert(0.0);
+
+                *cum_entry = (1.0 + *cum_entry) * (1.0 + r_val) - 1.0;
+                curr.insert(t.clone(), round_to_four(*cum_entry));
+            }
+            cum_arr[i] = (d.clone(), curr);
+        }
+        Ok(cum_arr)
     }
 }

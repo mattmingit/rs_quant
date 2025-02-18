@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use ndarray::array;
-use rs_quant::data::yahoo::{QuoteItem, Yahoo};
+use rs_quant::data::yahoo::{MultiQuoteItem, QuoteItem, Yahoo};
 use rs_quant::quantitative::returns::{ReturnType, Returns};
 
 #[test]
@@ -100,27 +102,49 @@ fn cumulative_returns() {
 
     let expected_returns = array![
         ("2024-02-02".to_string(), 0.0196), // (104/102) - 1
-        ("2024-02-03".to_string(), 0.0484), // cumulative sum: 0.0196 + (107/104 - 1)
+        ("2024-02-03".to_string(), 0.049),  // cumulative sum: 0.0196 + (107/104 - 1)
     ];
 
     assert_eq!(cumulative_returns, expected_returns);
 }
 
-#[tokio::test]
-async fn returns_multiquote_from_yahoo() {
-    let conn = Yahoo::provider().unwrap();
-    let data = conn
-        .get_multiple_quotes(
-            vec!["AAPL", "NVDA", "GOOG"],
-            None,
-            None,
-            Some("5d"),
-            Some("1d"),
-        )
-        .await
+#[test]
+fn test_cumulative_returns_multi_asset() {
+    let prices = array![
+        MultiQuoteItem {
+            date: "2024-02-01".to_string(),
+            prices: HashMap::from([("AAPL".to_string(), 150.0), ("GOOG".to_string(), 2800.0),]),
+        },
+        MultiQuoteItem {
+            date: "2024-02-02".to_string(),
+            prices: HashMap::from([("AAPL".to_string(), 155.0), ("GOOG".to_string(), 2856.0),]),
+        },
+        MultiQuoteItem {
+            date: "2024-02-03".to_string(),
+            prices: HashMap::from([("AAPL".to_string(), 158.0), ("GOOG".to_string(), 2900.0),]),
+        }
+    ];
+
+    let result = prices
+        .cumulative_returns_multiquote(ReturnType::Arithmetic)
         .unwrap();
-    println!(
-        "{:#?}",
-        data.returns_multiquote(ReturnType::Arithmetic).unwrap()
-    )
+
+    let expected = array![
+        (
+            "2024-02-02".to_string(),
+            HashMap::from([
+                ("AAPL".to_string(), 0.0333), // (1.0 + 0.0333) - 1.0 = 0.0333
+                ("GOOG".to_string(), 0.02),   // (1.0 + 0.02) - 1.0 = 0.02
+            ])
+        ),
+        (
+            "2024-02-03".to_string(),
+            HashMap::from([
+                ("AAPL".to_string(), 0.0533), // (1.0 + 0.0333) * (1.0 + 0.0129) - 1.0 = 0.0533
+                ("GOOG".to_string(), 0.0357), // (1.0 + 0.02) * (1.0 + 0.0154) - 1.0 = 0.0357
+            ])
+        )
+    ];
+
+    assert_eq!(result, expected);
 }

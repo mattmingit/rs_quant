@@ -2,8 +2,7 @@ use ndarray::Array1;
 use thiserror::Error;
 
 use super::position::Position;
-use crate::quantitative::returns::ReturnsError;
-//use crate::{database::queries::VWPortfolio, quantitative::returns::ReturnsError};
+use crate::{database::queries::VWPortfolio, quantitative::returns::ReturnsError};
 
 #[derive(Debug, Error)]
 pub enum PortfolioError {
@@ -32,27 +31,27 @@ impl Portfolio {
     }
 
     // create portfolio instance from database (currently personal MySql db)
-    // pub fn from_database(data: Vec<VWPortfolio>) -> Self {
-    //     let p = data
-    //         .into_iter()
-    //         .map(|e| Position {
-    //             symbol: e.ticker,
-    //             quantity: i32::try_from(e.quantity).unwrap(),
-    //             currency: e.currency,
-    //             buy_date: e.buy_date.to_string(),
-    //             buy_price: f64::try_from(e.buy_price).unwrap(),
-    //             buy_value: f64::try_from(e.buy_value).unwrap(),
-    //             market_price: f64::try_from(e.market_price).unwrap(),
-    //             market_value: f64::try_from(e.market_value).unwrap(),
-    //             pl: f64::try_from(e.pl).unwrap(),
-    //             pl_pct: f64::try_from(e.pl_pct).unwrap(),
-    //             weight: 0.0,
-    //         })
-    //         .collect::<Vec<Position>>();
-    //     Portfolio {
-    //         positions: p.into(),
-    //     }
-    // }
+    pub fn from_database(data: Vec<VWPortfolio>) -> Self {
+        let p = data
+            .into_iter()
+            .map(|e| Position {
+                symbol: e.ticker,
+                quantity: i32::try_from(e.quantity).unwrap(),
+                currency: e.currency,
+                buy_date: e.buy_date.to_string(),
+                buy_price: f64::try_from(e.buy_price).unwrap(),
+                buy_value: f64::try_from(e.buy_value).unwrap(),
+                market_price: f64::try_from(e.market_price).unwrap(),
+                market_value: f64::try_from(e.market_value).unwrap(),
+                pl: f64::try_from(e.pl).unwrap(),
+                pl_pct: f64::try_from(e.pl_pct).unwrap(),
+                weight: 0.0,
+            })
+            .collect::<Vec<Position>>();
+        Portfolio {
+            positions: p.into(),
+        }
+    }
 
     // calculate total investments across all positions
     pub fn total_investments(&self) -> f64 {

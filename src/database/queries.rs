@@ -1,9 +1,7 @@
 use chrono::NaiveDate;
 use serde::Serialize;
-use sqlx::{types::Decimal, Error as SqlxError, FromRow, MySql};
+use sqlx::{types::Decimal, Error as SqlxError, FromRow, MySqlPool};
 use thiserror::Error;
-
-use super::connection::DbConnection;
 
 #[derive(Debug, Error)]
 pub enum DbQueryError {
@@ -29,9 +27,9 @@ pub struct VWPortfolio {
     pub pl_pct: Decimal,
 }
 
-pub async fn portfolio_tickers(pool: &DbConnection<MySql>) -> Result<Vec<String>, DbQueryError> {
+pub async fn portfolio_tickers(pool: &MySqlPool) -> Result<Vec<String>, DbQueryError> {
     let r = sqlx::query!("SELECT ticker FROM vw_portfolio")
-        .fetch_all(&pool.pool)
+        .fetch_all(pool)
         .await?;
 
     if r.is_empty() {
@@ -40,6 +38,6 @@ pub async fn portfolio_tickers(pool: &DbConnection<MySql>) -> Result<Vec<String>
     Ok(r.iter().map(|r| r.ticker.clone()).collect())
 }
 
-pub async fn portfolio_table(pool: &DbConnection<MySql>) -> Result<Vec<VWPortfolio>, DbQueryError> {
-    Ok(sqlx::query_as::<_, VWPortfolio>("SELECT ticker, quantity, currency, buy_date, buy_price, buy_value, market_price, market_value, PL, PL_pct FROM vw_portfolio").fetch_all(&pool.pool).await?)
+pub async fn portfolio_table(pool: &MySqlPool) -> Result<Vec<VWPortfolio>, DbQueryError> {
+    Ok(sqlx::query_as::<_, VWPortfolio>("SELECT ticker, quantity, currency, buy_date, buy_price, buy_value, market_price, market_value, PL, PL_pct FROM vw_portfolio").fetch_all(pool).await?)
 }

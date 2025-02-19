@@ -22,7 +22,7 @@ pub struct VWPortfolio {
     pub buy_price: Decimal,
     pub buy_value: Decimal,
     pub market_price: Decimal,
-    pub equity: Decimal,
+    pub market_value: Decimal,
     #[sqlx(rename = "PL")]
     pub pl: Decimal,
     #[sqlx(rename = "PL_pct")]
@@ -41,5 +41,5 @@ pub async fn portfolio_tickers(pool: &DbConnection<MySql>) -> Result<Vec<String>
 }
 
 pub async fn portfolio_table(pool: &DbConnection<MySql>) -> Result<Vec<VWPortfolio>, DbQueryError> {
-    Ok(sqlx::query_as::<_, VWPortfolio>("SELECT ticker, quantity, currency, buy_date, buy_price, buy_value, market_price, equity, PL, PL_pct FROM vw_portfolio").fetch_all(&pool.pool).await?)
+    Ok(sqlx::query_as::<_, VWPortfolio>("SELECT ticker, quantity, currency, buy_date, buy_price, buy_value, market_price, market_value, PL, PL_pct FROM vw_portfolio").fetch_all(&pool.pool).await?)
 }

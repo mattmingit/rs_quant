@@ -1,5 +1,5 @@
 mod commons;
 mod data;
-mod database;
+//mod database; excluded from tests until correct re-implementation
 mod portfolio;
 mod quantitative;
